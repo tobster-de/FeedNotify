@@ -1,0 +1,51 @@
+﻿<Window x:Class="FeedNotify.View.NotificationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FeedNotify.View"
+        xmlns:viewModel="clr-namespace:FeedNotify.ViewModel"
+        xmlns:root="clr-namespace:FeedNotify"
+        xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        xmlns:control="clr-namespace:FeedNotify.Control"
+        xmlns:data="clr-namespace:FeedNotify.Data"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        Name="Window"
+        mc:Ignorable="d"
+        Title="Neue Beiträge" Height="300" Width="400" SizeChanged="Window_SizeChanged"
+        WindowStyle="ToolWindow" Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
+        SizeToContent="Height" Icon="/FeedNotify;component/1473858848_099353-rss-circle.ico">
+    <Window.DataContext>
+        <viewModel:NotificationWindowViewModel />
+    </Window.DataContext>
+    <i:Interaction.Behaviors>
+        <local:CloseWindowBehavior CloseTrigger="{Binding CloseTrigger}" />
+    </i:Interaction.Behaviors>
+    <Window.Resources>
+        <root:GroupDateConverter x:Key="GroupDateConverter" />
+
+        <CollectionViewSource x:Key="ItemsView" Source="{Binding FeedItems}">
+
+            <!-- Sorting -->
+            <CollectionViewSource.SortDescriptions>
+                <componentModel:SortDescription PropertyName="Publish" Direction="Descending" />
+            </CollectionViewSource.SortDescriptions>
+
+            <!-- Grouping -->
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="Publish"
+                                          Converter="{StaticResource ResourceKey=GroupDateConverter}" />
+            </CollectionViewSource.GroupDescriptions>
+
+        </CollectionViewSource>
+
+    </Window.Resources>
+    <ItemsControl ItemsSource="{Binding Source={StaticResource ResourceKey=ItemsView}}">
+        <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type data:FeedItem}">
+                <control:FeedItemControl Item="{Binding}"
+                                         Command="{Binding ElementName=Window, Path=DataContext.OpenCommand}" />
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</Window>

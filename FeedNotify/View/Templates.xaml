@@ -1,0 +1,14 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:syndication="clr-namespace:System.ServiceModel.Syndication;assembly=System.ServiceModel"
+                    xmlns:control="clr-namespace:FeedNotify.Control">
+
+    <!--<view:NullVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    <view:NullBoolConverter x:Key="NullToBoolConverter"/>-->
+
+    <!--<DataTemplate DataType="{x:Type syndication:SyndicationItem}">
+        <control:FeedItemControl Title="{Binding Title.Text}" Summary="{Binding Summary.Text}"/>
+    </DataTemplate>-->
+
+
+</ResourceDictionary>
