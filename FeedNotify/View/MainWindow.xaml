@@ -56,7 +56,7 @@
                             Summary="{Binding Summary.Text}"
                             Publish="{Binding PublishDate.DateTime}"/>-->
                     <control:FeedItemControl Item="{Binding}"
-                                             Command="{Binding ElementName=Window, Path=DataContext.OpenCommand}" />
+                                             OpenCommand="{Binding ElementName=Window, Path=DataContext.OpenCommand}" />
                     <!--<Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>

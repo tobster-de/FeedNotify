@@ -63,12 +63,19 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Control\TextBlockUtils.cs" />
+    <Compile Include="Control\TimeoutControl.xaml.cs">
+      <DependentUpon>TimeoutControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModel\NotificationWindowViewModel.cs" />
     <Compile Include="View\CloseWindowBehavior.cs" />
     <Compile Include="View\NotificationWindow.xaml.cs">
       <DependentUpon>NotificationWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="Control\FeedItemControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Control\TimeoutControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

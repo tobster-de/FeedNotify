@@ -1,6 +1,7 @@
 ﻿// FeedItemControl.xaml.cs
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,10 +14,20 @@ namespace FeedNotify.Control
     /// </summary>
     public partial class FeedItemControl : UserControl, INotifyPropertyChanged
     {
+        private int timeout, initialTimeout;
+
+        private Timer timer;
+
         #region Static Fields
 
-        public static readonly DependencyProperty CommandProperty = DependencyProperty.RegisterAttached(
-            "Command",
+        public static readonly DependencyProperty OpenCommandProperty = DependencyProperty.RegisterAttached(
+            "OpenCommand",
+            typeof(ICommand),
+            typeof(FeedItemControl),
+            new PropertyMetadata(null));
+
+        public static readonly DependencyProperty TimeoutCommandProperty = DependencyProperty.RegisterAttached(
+            "TimeoutCommand",
             typeof(ICommand),
             typeof(FeedItemControl),
             new PropertyMetadata(null));
@@ -27,52 +38,16 @@ namespace FeedNotify.Control
             typeof(FeedItemControl),
             new PropertyMetadata(null));
 
+        public static readonly DependencyProperty TimeoutProperty = DependencyProperty.RegisterAttached(
+            "Timeout",
+            typeof(int),
+            typeof(FeedItemControl),
+            new PropertyMetadata(-1));
+
         #endregion
 
         #region Constructors and Destructors
-
-        //public string Title
-        //{
-        //    get
-        //    {
-        //        return (string)this.GetValue(TitleProperty);
-        //    }
-
-        //    set
-        //    {
-        //        this.SetValue(TitleProperty, value);
-        //        this.OnPropertyChanged();
-        //    }
-        //}
-
-        //public string Summary
-        //{
-        //    get
-        //    {
-        //        return (string)this.GetValue(SummaryProperty);
-        //    }
-
-        //    set
-        //    {
-        //        this.SetValue(SummaryProperty, value);
-        //        this.OnPropertyChanged();
-        //    }
-        //}
-
-        //public DateTime Publish
-        //{
-        //    get
-        //    {
-        //        return (DateTime)this.GetValue(PublishProperty);
-        //    }
-
-        //    set
-        //    {
-        //        this.SetValue(PublishProperty, value);
-        //        this.OnPropertyChanged();
-        //    }
-        //}
-
+            
         public FeedItemControl()
         {
             this.InitializeComponent();
@@ -82,40 +57,36 @@ namespace FeedNotify.Control
 
         #region Public Events
 
-        //public static readonly DependencyProperty TitleProperty = DependencyProperty.RegisterAttached(
-        //    "Title",
-        //    typeof(string),
-        //    typeof(FeedItemControl),
-        //    new PropertyMetadata(null));
-
-        //public static readonly DependencyProperty SummaryProperty = DependencyProperty.RegisterAttached(
-        //    "Summary",
-        //    typeof(string),
-        //    typeof(FeedItemControl),
-        //    new PropertyMetadata(null));
-
-        //public static readonly DependencyProperty PublishProperty = DependencyProperty.RegisterAttached(
-        //    "Publish",
-        //    typeof(DateTime),
-        //    typeof(FeedItemControl),
-        //    new PropertyMetadata(null));
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion
 
         #region Public Properties
 
-        public ICommand Command
+        public ICommand OpenCommand
         {
             get
             {
-                return (ICommand)this.GetValue(CommandProperty);
+                return (ICommand)this.GetValue(OpenCommandProperty);
             }
 
             set
             {
-                this.SetValue(CommandProperty, value);
+                this.SetValue(OpenCommandProperty, value);
+                this.OnPropertyChanged();
+            }
+        }
+
+        public ICommand TimeoutCommand
+        {
+            get
+            {
+                return (ICommand)this.GetValue(TimeoutCommandProperty);
+            }
+
+            set
+            {
+                this.SetValue(TimeoutCommandProperty, value);
                 this.OnPropertyChanged();
             }
         }
@@ -134,9 +105,38 @@ namespace FeedNotify.Control
             }
         }
 
+        public int Timeout
+        {
+            get
+            {
+                return (int)this.GetValue(TimeoutProperty);
+            }
+
+            set
+            {
+                this.SetValue(TimeoutProperty, value);
+                this.OnPropertyChanged();
+            }
+        }
+        
+        public bool UseTimeout => this.Timeout >= 0 && this.TimeoutCommand != null;
+
+        public double TimeoutPercentage => this.UseTimeout && this.initialTimeout > 0 ? this.timeout * 100 / this.initialTimeout : 100;
+
         #endregion
 
         #region Methods
+
+        private void TimingStep()
+        {
+            this.timeout -= 100;
+            this.OnPropertyChanged(nameof(this.TimeoutPercentage));
+
+            if (this.timeout <= 0)
+            {
+                this.Dispatcher.Invoke(() => this.TimeoutCommand?.Execute(this.Item));
+            }
+        }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -147,10 +147,23 @@ namespace FeedNotify.Control
         {
             if (e.ClickCount == 2)
             {
-                this.Command?.Execute(this.Item);
+                this.OpenCommand?.Execute(this.Item);
             }
         }
 
         #endregion
+
+        private void feedItemControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (this.UseTimeout)
+            {
+                this.OnPropertyChanged(nameof(this.UseTimeout));
+
+                this.timeout = this.Timeout;
+                this.initialTimeout = this.Timeout;
+
+                this.timer = new Timer(o => this.TimingStep(), null, 0, 100);
+            }
+        }
     }
 }

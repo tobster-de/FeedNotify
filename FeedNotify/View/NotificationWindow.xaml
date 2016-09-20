@@ -44,7 +44,9 @@
         <ItemsControl.ItemTemplate>
             <DataTemplate DataType="{x:Type data:FeedItem}">
                 <control:FeedItemControl Item="{Binding}"
-                                         Command="{Binding ElementName=Window, Path=DataContext.OpenCommand}" />
+                                         Timeout="30000"
+                                         OpenCommand="{Binding ElementName=Window, Path=DataContext.OpenCommand}" 
+                                         TimeoutCommand="{Binding ElementName=Window, Path=DataContext.TimeoutCommand}" />
             </DataTemplate>
         </ItemsControl.ItemTemplate>
     </ItemsControl>

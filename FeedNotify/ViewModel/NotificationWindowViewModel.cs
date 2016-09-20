@@ -16,6 +16,8 @@ namespace FeedNotify.ViewModel
 
         private ICommand openCommand;
 
+        private ICommand timeoutCommand;
+
         #endregion
 
         #region Public Properties
@@ -42,6 +44,14 @@ namespace FeedNotify.ViewModel
             }
         }
 
+        public ICommand TimeoutCommand
+        {
+            get
+            {
+                return this.timeoutCommand ?? (this.timeoutCommand = new ActionExCommand<FeedItem>(o => this.RemoveItem(o)));
+            }
+        }
+
         #endregion
 
         #region Public Methods and Operators
@@ -60,12 +70,17 @@ namespace FeedNotify.ViewModel
 
         private void Open(FeedItem feedItem)
         {
+            this.RemoveItem(feedItem);
+            Process.Start(feedItem.Item.Links.First().Uri.OriginalString);
+        }
+
+        private void RemoveItem(FeedItem feedItem)
+        {
             this.FeedItems.Remove(feedItem);
             if (!this.FeedItems.Any())
             {
                 this.CloseTrigger = true;
             }
-            Process.Start(feedItem.Item.Links.First().Uri.OriginalString);
         }
 
         #endregion
