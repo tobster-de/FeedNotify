@@ -1,4 +1,5 @@
 ﻿// FeedItemControl.xaml.cs
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -145,13 +146,32 @@ namespace FeedNotify.Control
 
         private void UIElement_OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 2)
+            if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left)
             {
                 this.OpenCommand?.Execute(this.Item);
             }
         }
 
         #endregion
+
+        private void TimeoutControl_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (this.UseTimeout)
+            {
+                this.timeout = this.initialTimeout;
+                this.OnPropertyChanged(nameof(this.TimeoutPercentage));
+            }
+        }
+
+        private void feedItemControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (this.timer != null)
+            {
+                this.timer.Change(System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
+                this.timer.Dispose();
+                this.timer = null;
+            }
+        }
 
         private void feedItemControl_Loaded(object sender, RoutedEventArgs e)
         {

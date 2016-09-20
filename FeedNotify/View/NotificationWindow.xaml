@@ -40,7 +40,7 @@
         </CollectionViewSource>
 
     </Window.Resources>
-    <ItemsControl ItemsSource="{Binding Source={StaticResource ResourceKey=ItemsView}}">
+    <ItemsControl ItemsSource="{Binding Source={StaticResource ResourceKey=ItemsView}}" >
         <ItemsControl.ItemTemplate>
             <DataTemplate DataType="{x:Type data:FeedItem}">
                 <control:FeedItemControl Item="{Binding}"

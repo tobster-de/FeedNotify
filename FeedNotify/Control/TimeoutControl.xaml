@@ -7,23 +7,26 @@
              xmlns:local="clr-namespace:FeedNotify.Control"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <Path x:Name="pathRoot" Stroke="{Binding SegmentColor, ElementName=userControl}"
-    StrokeThickness="{Binding StrokeThickness, ElementName=userControl}"
-    HorizontalAlignment="Left" VerticalAlignment="Top">
-        <Path.Data>
-            <PathGeometry>
-                <PathGeometry.Figures>
-                    <PathFigureCollection>
-                        <PathFigure x:Name="pathFigure">
-                            <PathFigure.Segments>
-                                <PathSegmentCollection>
-                                    <ArcSegment x:Name="arcSegment" SweepDirection="Clockwise" />
-                                </PathSegmentCollection>
-                            </PathFigure.Segments>
-                        </PathFigure>
-                    </PathFigureCollection>
-                </PathGeometry.Figures>
-            </PathGeometry>
-        </Path.Data>
-    </Path>
+    <Grid>
+        <Ellipse Fill="LightGray"/>
+        <Path x:Name="pathRoot" Stroke="{Binding SegmentColor, ElementName=userControl}"
+              StrokeThickness="{Binding StrokeThickness, ElementName=userControl}"
+              HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Path.Data>
+                <PathGeometry>
+                    <PathGeometry.Figures>
+                        <PathFigureCollection>
+                            <PathFigure x:Name="pathFigure">
+                                <PathFigure.Segments>
+                                    <PathSegmentCollection>
+                                        <ArcSegment x:Name="arcSegment" SweepDirection="Clockwise" />
+                                    </PathSegmentCollection>
+                                </PathFigure.Segments>
+                            </PathFigure>
+                        </PathFigureCollection>
+                    </PathGeometry.Figures>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+    </Grid>
 </UserControl>
