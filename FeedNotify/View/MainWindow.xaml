@@ -45,8 +45,21 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Button Margin="10" Command="{Binding LoadCommand}">Laden</Button>
-        <ListBox Grid.Row="1" Name="ListBox"
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Button x:Name="Button" Margin="10" Command="{Binding LoadCommand}" Content="Laden"/>
+        <control:TimeoutControl Grid.Column="1" Margin="0,0,10,0" 
+                                Width="{Binding ActualHeight, ElementName=Button, Mode=OneWay}" 
+                                Height="{Binding ActualHeight, ElementName=Button, Mode=OneWay}"
+                                VerticalAlignment="Center" Radius="7" StrokeThickness="3" SegmentColor="Black" 
+                                Percentage="{Binding Path=TimeoutPercentage}" />
+        <Button x:Name="Settings" Margin="0,10,10,10" Command="{Binding SettingsCommand}" Grid.Column="2" Width="20" Content="*"/>
+
+        <ListBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Name="ListBox"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  ItemsSource="{Binding Source={StaticResource ResourceKey=ItemsView}}">
             <ListBox.ItemTemplate>

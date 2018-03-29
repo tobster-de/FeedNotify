@@ -1,4 +1,5 @@
 ﻿// ViewModel.cs
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -11,6 +12,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Xml;
 using FeedNotify.Data;
+using FeedNotify.Properties;
 using FeedNotify.View;
 
 namespace FeedNotify.ViewModel
@@ -24,10 +26,19 @@ namespace FeedNotify.ViewModel
         private NotificationWindow notificationWindow;
 
         private ICommand openCommand;
+        private ICommand settingsCommand;
 
         private bool running;
 
         private Timer timer;
+
+        private int reloadInterval = 60;
+
+        private int timerInterval = 500;
+
+        private double timeout;
+
+        private double timeoutValue;
 
         #endregion
 
@@ -42,7 +53,29 @@ namespace FeedNotify.ViewModel
                 return;
             }
 
-            this.timer = new Timer(o => this.StartLoading(), null, 0, 1000 * 60 * 2);
+            this.LoadSettings();
+            this.InitTimeout();
+            this.timer = new Timer(o => this.TimingStep(), null, this.timerInterval, this.timerInterval);
+        }
+
+        public void LoadSettings()
+        {
+            Settings settings = Properties.Settings.Default;
+            this.reloadInterval = settings.Interval;
+
+            if (settings.Feeds != null && settings.Feeds.Any())
+            {
+                this.Feeds = new List<string>(settings.Feeds);
+            }
+            else
+            {
+                this.Feeds = new List<string>();
+            }
+        }
+
+        private void InitTimeout()
+        {
+            this.timeoutValue = this.timeout = this.reloadInterval * 1000;
         }
 
         #endregion
@@ -55,7 +88,15 @@ namespace FeedNotify.ViewModel
         {
             get
             {
-                return this.loadCommand ?? (this.loadCommand = new ActionCommand(() => this.StartLoading(), () => !this.running));
+                return this.loadCommand ?? (this.loadCommand = new ActionCommand(() => this.StartLoading(false), () => !this.running));
+            }
+        }
+
+        public ICommand SettingsCommand
+        {
+            get
+            {
+                return this.settingsCommand ?? (this.settingsCommand = new ActionCommand(() => this.OpenSettings()));
             }
         }
 
@@ -67,20 +108,29 @@ namespace FeedNotify.ViewModel
             }
         }
 
+        public double TimeoutPercentage => this.timeoutValue * 100 / this.timeout;
+
         #endregion
+
+        public List<string> Feeds { get; set; }
 
         #region Methods
 
-        private void Load()
+        private void Load(bool notify)
         {
             try
             {
                 this.running = true;
 
-                string[] urls = { "http://www.heise.de/newsticker/heise-atom.xml", "http://rss.golem.de/rss.php?feed=RSS2.0" };
+                if (this.Feeds == null || !this.Feeds.Any())
+                {
+                    return;
+                }
+
+                //string[] urls = { "http://www.heise.de/newsticker/heise-atom.xml", "http://rss.golem.de/rss.php?feed=RSS2.0" };
 
                 var feeds = new List<SyndicationFeed>();
-                foreach (var url in urls)
+                foreach (var url in this.Feeds)
                 {
                     var reader = XmlReader.Create(url);
                     feeds.Add(SyndicationFeed.Load(reader));
@@ -96,24 +146,24 @@ namespace FeedNotify.ViewModel
                 IList<FeedItem> newest = newFeedItems.OrderByDescending(item => item.Publish).Take(3).ToList();
                 Application.Current.Dispatcher.Invoke(
                     () =>
-                        {
-                            newFeedItems.ForEach(this.FeedItems.Add);
+                    {
+                        newFeedItems.ForEach(this.FeedItems.Add);
 
-                            if (newest.Any())
+                        if (notify && newest.Any())
+                        {
+                            if (this.notificationWindow.IsVisible)
                             {
-                                if (this.notificationWindow.IsVisible)
-                                {
-                                    this.notificationWindow.DisplayItems(newest);
-                                    this.notificationWindow.Activate();
-                                }
-                                else
-                                {
-                                    this.notificationWindow = new NotificationWindow();
-                                    this.notificationWindow.DisplayItems(newest);
-                                    this.notificationWindow.Show();
-                                }
+                                this.notificationWindow.DisplayItems(newest);
+                                this.notificationWindow.Activate();
                             }
-                        });
+                            else
+                            {
+                                this.notificationWindow = new NotificationWindow();
+                                this.notificationWindow.DisplayItems(newest);
+                                this.notificationWindow.Show();
+                            }
+                        }
+                    });
             }
             finally
             {
@@ -128,11 +178,35 @@ namespace FeedNotify.ViewModel
             Process.Start(feedItem.Item.Links.First().Uri.OriginalString);
         }
 
-        private void StartLoading()
+        private void TimingStep()
         {
-            var task = new Task(
-                () => { this.Load(); });
+            this.timeoutValue -= this.timerInterval;
+            this.OnPropertyChanged(nameof(this.TimeoutPercentage));
+
+            if (this.timeoutValue <= 0)
+            {
+                this.StartLoading();
+            }
+        }
+
+        private void StartLoading(bool notify = true)
+        {
+            this.InitTimeout();
+            var task = new Task(() => { this.Load(notify); });
             task.Start();
+        }
+
+        private void OpenSettings()
+        {
+            SettingsWindow settingsWindow = new SettingsWindow();
+            if (settingsWindow.ShowDialog().GetValueOrDefault())
+            {
+                var settingsViewModel = ((SettingsViewModel)settingsWindow.DataContext);
+                this.Feeds = new List<string>(settingsViewModel.Feeds);
+
+                this.reloadInterval = settingsViewModel.Interval;
+                InitTimeout();
+            }
         }
 
         #endregion

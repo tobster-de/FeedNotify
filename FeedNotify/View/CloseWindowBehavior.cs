@@ -11,6 +11,9 @@ namespace FeedNotify.View
         public static readonly DependencyProperty CloseTriggerProperty =
             DependencyProperty.Register("CloseTrigger", typeof(bool), typeof(CloseWindowBehavior), new PropertyMetadata(false, OnCloseTriggerChanged));
 
+        public static readonly DependencyProperty DialogResultProperty =
+            DependencyProperty.Register("DialogResult", typeof(bool?), typeof(CloseWindowBehavior), new PropertyMetadata(null));
+
         #endregion
 
         #region Public Properties
@@ -24,6 +27,18 @@ namespace FeedNotify.View
             set
             {
                 this.SetValue(CloseTriggerProperty, value);
+            }
+        }
+
+        public bool? DialogResult
+        {
+            get
+            {
+                return (bool?)this.GetValue(DialogResultProperty);
+            }
+            set
+            {
+                this.SetValue(DialogResultProperty, value);
             }
         }
 
@@ -46,6 +61,7 @@ namespace FeedNotify.View
             // when closetrigger is true, close the window
             if (this.CloseTrigger)
             {
+                this.AssociatedObject.DialogResult = DialogResult;
                 this.AssociatedObject.Close();
             }
         }
