@@ -61,7 +61,11 @@ namespace FeedNotify.View
             // when closetrigger is true, close the window
             if (this.CloseTrigger)
             {
-                this.AssociatedObject.DialogResult = DialogResult;
+                if (this.DialogResult.HasValue)
+                {
+                    this.AssociatedObject.DialogResult = DialogResult;
+                }
+
                 this.AssociatedObject.Close();
             }
         }
