@@ -17,10 +17,11 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <TextBlock FontWeight="Bold" Margin="5" TextTrimming="CharacterEllipsis"
-                   HorizontalAlignment="Stretch"
-                   Text="{Binding ElementName=feedItemControl, Path=Item.Title}"
-                   local:TextBlockUtils.AutoTooltip="True" />
+        <htmlTextBlock:HtmlHighlightTextBlock FontWeight="Bold" Margin="5" TextTrimming="CharacterEllipsis"
+                                              HorizontalAlignment="Stretch"
+                                              Html="{Binding ElementName=feedItemControl, Path=Item.Title}"
+                                              Highlight="{Binding ElementName=feedItemControl, Path=FilterText, UpdateSourceTrigger=PropertyChanged}"
+                                              local:TextBlockUtils.AutoTooltip="True" />
         <htmlTextBlock:HtmlHighlightTextBlock Margin="5" Grid.Row="1"
                                               HorizontalAlignment="Stretch"
                                               Html="{Binding ElementName=feedItemControl, Path=Item.Summary}"
