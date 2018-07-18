@@ -76,18 +76,19 @@ namespace HtmlTextBlock
                     case "u": underline = true; break;
                     case "sub": subscript = true; break;
                     case "sup": superscript = true; break;
+                    case "mark":
+                        try { background = Colors.Gold; }
+                        catch { background = null; }
+                        break;
                     case "a": if (aTag.Contains("href")) hyperlink = aTag["href"]; break;
-                    case "font" :
+                    case "font":
                         if (aTag.Contains("color"))
                             try { foreground = (Color)ColorConverter.ConvertFromString(aTag["color"]); }
                             catch { foreground = Colors.Black; }
-                        if (aTag.Contains("background"))
-                            try { background = (Color)ColorConverter.ConvertFromString(aTag["background"]); }
-                            catch { background = null; }
                         if (aTag.Contains("face"))
                             font = aTag["face"];
                         if (aTag.Contains("size"))
-                            try { fontSize= Double.Parse(aTag["size"]); }
+                            try { fontSize = Double.Parse(aTag["size"]); }
                             catch { };
                         break;
                 }
@@ -101,5 +102,5 @@ namespace HtmlTextBlock
 
 
     }
-	
+
 }

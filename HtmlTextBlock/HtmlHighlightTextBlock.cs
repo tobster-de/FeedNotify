@@ -55,8 +55,8 @@ namespace HtmlTextBlock
 
                 while (idx != -1)
                 { 
-                    string span = "<font background=gold>";
-                    html = String.Format("{0}{1}{2}</font>{3}",
+                    string span = "<mark>";
+                    html = String.Format("{0}{1}{2}</mark>{3}",
                         html.Substring(0, idx), span, html.Substring(idx, this.Highlight.Length), html.Substring(idx + this.Highlight.Length));
                     idx = html.IndexOf(this.Highlight, idx + span.Length + this.Highlight.Length, StringComparison.InvariantCultureIgnoreCase);
                 }

@@ -131,7 +131,7 @@ namespace HtmlTextBlock
         /// Array Consts
         /// </summary>      
         #region Array Consts
-        public static HTMLTagInfo[] BuiltinTags = new HTMLTagInfo[51] {   
+        public static HTMLTagInfo[] BuiltinTags = new HTMLTagInfo[52] {   
           #region Built in tag list
            //HtmlTag Level guide
            // 50 Master
@@ -182,8 +182,9 @@ namespace HtmlTextBlock
            new HTMLTagInfo ("h5",           HTMLFlag.Region,        07),
            new HTMLTagInfo ("h6",           HTMLFlag.Region,        07),
            new HTMLTagInfo ("span",         HTMLFlag.Region,        07),
-           new HTMLTagInfo ("font",         HTMLFlag.TextFormat,    04),           
-           new HTMLTagInfo ("u",            HTMLFlag.TextFormat,    04),           
+           new HTMLTagInfo ("font",         HTMLFlag.TextFormat,    04),
+           new HTMLTagInfo ("mark",         HTMLFlag.TextFormat,    04),
+           new HTMLTagInfo ("u",            HTMLFlag.TextFormat,    04),
            new HTMLTagInfo ("b",            HTMLFlag.TextFormat,    04), 
            new HTMLTagInfo ("s",            HTMLFlag.TextFormat,    04), 
            new HTMLTagInfo ("i",            HTMLFlag.TextFormat,    04), 
