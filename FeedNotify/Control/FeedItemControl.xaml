@@ -21,10 +21,11 @@
                    HorizontalAlignment="Stretch"
                    Text="{Binding ElementName=feedItemControl, Path=Item.Title}"
                    local:TextBlockUtils.AutoTooltip="True" />
-        <htmlTextBlock:HtmlTextBlock Margin="5" Grid.Row="1"
-                                     HorizontalAlignment="Stretch"
-                                     Html="{Binding ElementName=feedItemControl, Path=Item.Summary}"
-                                     TextWrapping="Wrap" />
+        <htmlTextBlock:HtmlHighlightTextBlock Margin="5" Grid.Row="1"
+                                              HorizontalAlignment="Stretch"
+                                              Html="{Binding ElementName=feedItemControl, Path=Item.Summary}"
+                                              Highlight="{Binding ElementName=feedItemControl, Path=FilterText, UpdateSourceTrigger=PropertyChanged}"
+                                              TextWrapping="Wrap" />
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>

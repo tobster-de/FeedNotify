@@ -45,10 +45,16 @@ namespace FeedNotify.Control
             typeof(FeedItemControl),
             new PropertyMetadata(-1));
 
+        public static readonly DependencyProperty FilterTextProperty = DependencyProperty.RegisterAttached(
+            "FilterText",
+            typeof(string),
+            typeof(FeedItemControl),
+            new PropertyMetadata(null));
+
         #endregion
 
         #region Constructors and Destructors
-            
+
         public FeedItemControl()
         {
             this.InitializeComponent();
@@ -66,60 +72,59 @@ namespace FeedNotify.Control
 
         public ICommand OpenCommand
         {
-            get
-            {
-                return (ICommand)this.GetValue(OpenCommandProperty);
-            }
+            get => (ICommand)this.GetValue(FeedItemControl.OpenCommandProperty);
 
             set
             {
-                this.SetValue(OpenCommandProperty, value);
+                this.SetValue(FeedItemControl.OpenCommandProperty, value);
                 this.OnPropertyChanged();
             }
         }
 
         public ICommand TimeoutCommand
         {
-            get
-            {
-                return (ICommand)this.GetValue(TimeoutCommandProperty);
-            }
+            get => (ICommand)this.GetValue(FeedItemControl.TimeoutCommandProperty);
 
             set
             {
-                this.SetValue(TimeoutCommandProperty, value);
+                this.SetValue(FeedItemControl.TimeoutCommandProperty, value);
                 this.OnPropertyChanged();
             }
         }
 
         public FeedItem Item
         {
-            get
-            {
-                return (FeedItem)this.GetValue(ItemProperty);
-            }
+            get => (FeedItem)this.GetValue(FeedItemControl.ItemProperty);
 
             set
             {
-                this.SetValue(ItemProperty, value);
+                this.SetValue(FeedItemControl.ItemProperty, value);
                 this.OnPropertyChanged();
             }
         }
 
         public int Timeout
         {
-            get
-            {
-                return (int)this.GetValue(TimeoutProperty);
-            }
+            get => (int)this.GetValue(FeedItemControl.TimeoutProperty);
 
             set
             {
-                this.SetValue(TimeoutProperty, value);
+                this.SetValue(FeedItemControl.TimeoutProperty, value);
                 this.OnPropertyChanged();
             }
         }
-        
+
+        public string FilterText
+        {
+            get => (string)this.GetValue(FeedItemControl.FilterTextProperty);
+
+            set
+            {
+                this.SetValue(FeedItemControl.FilterTextProperty, value);
+                this.OnPropertyChanged();
+            }
+        }
+
         public bool UseTimeout => this.Timeout >= 0 && this.TimeoutCommand != null;
 
         public double TimeoutPercentage => this.UseTimeout && this.initialTimeout > 0 ? this.timeout * 100 / this.initialTimeout : 100;

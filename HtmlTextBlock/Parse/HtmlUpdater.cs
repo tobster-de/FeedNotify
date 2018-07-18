@@ -71,6 +71,8 @@ namespace HtmlTextBlock
 
                     if (currentState.Foreground.HasValue)
                         retVal.Foreground = new SolidColorBrush(currentState.Foreground.Value);
+                    if (currentState.Background.HasValue)
+                        retVal.Background = new SolidColorBrush(currentState.Background.Value);
 
                     if (currentState.Font != null)
                         try { retVal.FontFamily = new FontFamily(currentState.Font); }

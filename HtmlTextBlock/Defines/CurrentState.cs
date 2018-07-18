@@ -24,6 +24,7 @@ namespace HtmlTextBlock
         private bool superscript;
         private string hyperlink = null;
         private Color? foreground;
+        private Color? background;
         private string font = null;
         private double? fontSize;
 
@@ -35,6 +36,7 @@ namespace HtmlTextBlock
         public bool SuperScript { get { return superscript; } }
         public string HyperLink { get { return hyperlink; } }
         public Color? Foreground { get { return foreground; } }
+        public Color? Background { get { return background; } }
         public string Font { get { return font; } }
         public double? FontSize { get { return fontSize; } }
 
@@ -61,6 +63,7 @@ namespace HtmlTextBlock
             subscript = false;
             superscript = false;
             foreground = null;
+            background = null;
             font = null;
             hyperlink = "";
             fontSize = null;
@@ -78,6 +81,9 @@ namespace HtmlTextBlock
                         if (aTag.Contains("color"))
                             try { foreground = (Color)ColorConverter.ConvertFromString(aTag["color"]); }
                             catch { foreground = Colors.Black; }
+                        if (aTag.Contains("background"))
+                            try { background = (Color)ColorConverter.ConvertFromString(aTag["background"]); }
+                            catch { background = null; }
                         if (aTag.Contains("face"))
                             font = aTag["face"];
                         if (aTag.Contains("size"))

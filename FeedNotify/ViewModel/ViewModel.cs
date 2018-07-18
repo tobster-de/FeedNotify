@@ -40,6 +40,8 @@ namespace FeedNotify.ViewModel
 
         private double timeoutValue;
 
+        private string filterText;
+
         #endregion
 
         #region Constructors and Destructors
@@ -113,6 +115,12 @@ namespace FeedNotify.ViewModel
         #endregion
 
         public List<string> Feeds { get; set; }
+
+        public string FilterText
+        {
+            get => this.filterText;
+            set => this.SetValue(ref this.filterText, value);
+        }
 
         #region Methods
 
