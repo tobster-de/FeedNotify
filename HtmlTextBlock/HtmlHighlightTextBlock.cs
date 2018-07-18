@@ -7,6 +7,7 @@ using System.Windows.Documents;
 using System.Windows;
 using HtmlTextBlock;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace HtmlTextBlock
 {
@@ -45,7 +46,7 @@ namespace HtmlTextBlock
                 return;
             }
 
-            if (!String.IsNullOrEmpty(highlight) && html.Length >= highlight.Length && highlight.Length >= 3)
+            if (!string.IsNullOrEmpty(highlight) && html.Length >= highlight.Length && highlight.Length >= 3)
             {
                 int idx = html.IndexOf(highlight, StringComparison.InvariantCultureIgnoreCase);
                 //if (idx > 0)
@@ -54,11 +55,22 @@ namespace HtmlTextBlock
                 //}
 
                 while (idx != -1)
-                { 
-                    string span = "<mark>";
-                    html = String.Format("{0}{1}{2}</mark>{3}",
-                        html.Substring(0, idx), span, html.Substring(idx, this.Highlight.Length), html.Substring(idx + this.Highlight.Length));
-                    idx = html.IndexOf(this.Highlight, idx + span.Length + this.Highlight.Length, StringComparison.InvariantCultureIgnoreCase);
+                {
+                    if (this.IsNotInLinkTag(html, idx))
+                    {
+                        string span = "<mark>";
+                        html = string.Format(
+                            "{0}{1}{2}</mark>{3}",
+                            html.Substring(0, idx),
+                            span,
+                            html.Substring(idx, this.Highlight.Length),
+                            html.Substring(idx + this.Highlight.Length));
+                        idx = html.IndexOf(this.Highlight, idx + span.Length + this.Highlight.Length, StringComparison.InvariantCultureIgnoreCase);
+                    }
+                    else
+                    {
+                        idx = html.IndexOf(this.Highlight, idx + 1, StringComparison.InvariantCultureIgnoreCase);
+                    }
                 }
             }
 
@@ -69,6 +81,14 @@ namespace HtmlTextBlock
 
             HtmlUpdater updater = new HtmlUpdater(this); //output
             updater.Update(tree);
+        }
+
+        private bool IsNotInLinkTag(string html, int idx)
+        {
+            int aopenCount = Regex.Matches(html.Substring(0, idx), "<a").Count;
+            int acloseCount = Regex.Matches(html.Substring(0, idx), "</a>").Count;
+
+            return Math.Abs(aopenCount - acloseCount) == 0;
         }
 
         public static void OnHtmlChanged(DependencyObject s, DependencyPropertyChangedEventArgs e)
