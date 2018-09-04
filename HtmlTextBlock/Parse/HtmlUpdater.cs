@@ -124,12 +124,16 @@ namespace HtmlTextBlock
 
             foreach (HtmlTag tag in tagList)
             {
+                if (tag.ID < 0)
+                {
+                    continue;
+                }
+
                 switch (Defines.BuiltinTags[tag.ID].flags)
                 {
                     case HTMLFlag.TextFormat: UpdateStyle(tag); break;
                     case HTMLFlag.Element: textBlock.Inlines.Add(UpdateElement(tag)); break;
                 }
-
             }
         }
     }
