@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Xml;
+using FeedNotify.Control;
 using FeedNotify.Data;
 using FeedNotify.Properties;
 using FeedNotify.View;
@@ -56,7 +57,8 @@ namespace FeedNotify.ViewModel
             }
 
             this.LoadSettings();
-            this.InitTimeout();
+            //this.InitTimeout();
+            this.StartLoading(false);
             this.timer = new Timer(o => this.TimingStep(), null, this.timerInterval, this.timerInterval);
         }
 
@@ -112,15 +114,22 @@ namespace FeedNotify.ViewModel
 
         public double TimeoutPercentage => this.timeoutValue * 100 / this.timeout;
 
-        #endregion
-
         public List<string> Feeds { get; set; }
 
         public string FilterText
         {
             get => this.filterText;
-            set => this.SetValue(ref this.filterText, value);
+            set
+            {
+                this.SetValue(ref this.filterText, value);
+
+                this.SyncAnnotations();
+            }
         }
+
+        public ObservableCollection<AnnotatedListBox.Annotation> Annotations { get; } = new ObservableCollection<AnnotatedListBox.Annotation>();
+
+        #endregion
 
         #region Methods
 
@@ -214,6 +223,23 @@ namespace FeedNotify.ViewModel
 
                 this.reloadInterval = settingsViewModel.Interval;
                 InitTimeout();
+            }
+        }
+
+        private void SyncAnnotations()
+        {
+            List<FeedItem> toBeAnnotated = this.FeedItems.Where(f => f.Title.Contains(this.filterText) || f.Summary.Contains(this.filterText)).ToList();
+
+            IList<AnnotatedListBox.Annotation> toBeRemoved = this.Annotations.Where(a => !toBeAnnotated.Contains(a.SourceItem)).ToList();
+            foreach (var anno in toBeRemoved)
+            {
+                this.Annotations.Remove(anno);
+            }
+
+            IList<FeedItem> toBeAdded = toBeAnnotated.Except(this.Annotations.Select(a => a.SourceItem)).OfType<FeedItem>().ToList();
+            foreach (FeedItem feedItem in toBeAdded)
+            {
+                this.Annotations.Add(new AnnotatedListBox.Annotation() { SourceItem = feedItem });
             }
         }
 

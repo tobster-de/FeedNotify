@@ -86,6 +86,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Control\AnnotatedListBox.cs" />
     <Compile Include="Control\TextBlockUtils.cs" />
     <Compile Include="Control\TimeoutControl.xaml.cs">
       <DependentUpon>TimeoutControl.xaml</DependentUpon>

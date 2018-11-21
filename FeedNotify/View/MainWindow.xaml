@@ -17,28 +17,35 @@
         <viewModel:ViewModel />
     </Window.DataContext>
     <Window.Resources>
-        <local:GroupDateConverter x:Key="GroupDateConverter" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Templates.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
-        <CollectionViewSource x:Key="ItemsView" Source="{Binding FeedItems}">
+            <local:GroupDateConverter x:Key="GroupDateConverter" />
 
-            <!-- Sorting -->
-            <CollectionViewSource.SortDescriptions>
-                <componentModel:SortDescription PropertyName="Publish" Direction="Descending" />
-            </CollectionViewSource.SortDescriptions>
+            <CollectionViewSource x:Key="ItemsView" Source="{Binding FeedItems}">
 
-            <!-- Grouping -->
-            <CollectionViewSource.GroupDescriptions>
-                <PropertyGroupDescription PropertyName="Publish"
+                <!-- Sorting -->
+                <CollectionViewSource.SortDescriptions>
+                    <componentModel:SortDescription PropertyName="Publish" Direction="Descending" />
+                </CollectionViewSource.SortDescriptions>
+
+                <!-- Grouping -->
+                <CollectionViewSource.GroupDescriptions>
+                    <PropertyGroupDescription PropertyName="Publish"
                                           Converter="{StaticResource ResourceKey=GroupDateConverter}" />
-            </CollectionViewSource.GroupDescriptions>
+                </CollectionViewSource.GroupDescriptions>
 
-        </CollectionViewSource>
+            </CollectionViewSource>
 
-        <DataTemplate x:Key="GroupingHeader">
-            <Border BorderThickness="0,0,0,1" BorderBrush="Black" Margin="0,5,0,0">
-                <TextBlock Text="{Binding Path=Name}" />
-            </Border>
-        </DataTemplate>
+            <DataTemplate x:Key="GroupingHeader">
+                <Border BorderThickness="0,0,0,1" BorderBrush="Black" Margin="0,5,0,0">
+                    <TextBlock Text="{Binding Path=Name}" />
+                </Border>
+            </DataTemplate>
+
+        </ResourceDictionary>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -67,9 +74,10 @@
             </Viewbox>
         </Button>
 
-        <ListBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" Name="ListBox"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 ItemsSource="{Binding Source={StaticResource ResourceKey=ItemsView}}">
+        <control:AnnotatedListBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" x:Name="ListBox"
+                                  Annotations="{Binding Annotations, UpdateSourceTrigger=PropertyChanged}"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ItemsSource="{Binding Source={StaticResource ResourceKey=ItemsView}}">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type data:FeedItem}">
 
@@ -82,6 +90,6 @@
             <ListBox.GroupStyle>
                 <GroupStyle HeaderTemplate="{StaticResource ResourceKey=GroupingHeader}" />
             </ListBox.GroupStyle>
-        </ListBox>
+        </control:AnnotatedListBox>
     </Grid>
 </Window>
