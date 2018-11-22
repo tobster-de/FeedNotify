@@ -226,9 +226,19 @@ namespace FeedNotify.ViewModel
             }
         }
 
+        public static bool StringContains(string source, string toCheck, StringComparison comp)
+        {
+            return source?.IndexOf(toCheck, comp) >= 0;
+        }
+
         private void SyncAnnotations()
         {
-            List<FeedItem> toBeAnnotated = this.FeedItems.Where(f => f.Title.Contains(this.filterText) || f.Summary.Contains(this.filterText)).ToList();
+            List<FeedItem> toBeAnnotated =
+                this.filterText.Length >= 3
+                    ? this.FeedItems.Where(
+                        f => StringContains(f.Title, this.filterText, StringComparison.InvariantCultureIgnoreCase)
+                             || StringContains(f.Summary, this.filterText, StringComparison.InvariantCultureIgnoreCase)).ToList()
+                    : new List<FeedItem>();
 
             IList<AnnotatedListBox.Annotation> toBeRemoved = this.Annotations.Where(a => !toBeAnnotated.Contains(a.SourceItem)).ToList();
             foreach (var anno in toBeRemoved)
