@@ -13,13 +13,27 @@ namespace FeedNotify.Control
 {
     public sealed class AnnotatedListBox : ListBox
     {
+        public enum AnnotationType
+        {
+            Selection,
+            Search
+        }
+
         public struct Annotation
         {
             public object SourceItem;
+
+            public AnnotationType Type;
+
+            public Annotation(object sourceItem, AnnotationType type)
+            {
+                this.SourceItem = sourceItem;
+                this.Type = type;
+            }
         }
 
         private Canvas annotationCanvas;
-
+        
         private Dictionary<Annotation, FrameworkElement> annotationDictionary = new Dictionary<Annotation, FrameworkElement>();
 
         public static readonly DependencyProperty AnnotationsProperty =
@@ -37,15 +51,6 @@ namespace FeedNotify.Control
             }
 
             control.Annotations = e.NewValue as ObservableCollection<AnnotatedListBox.Annotation>;
-
-            //if (e.NewValue != null && e.OldValue == null)
-            //{
-            //    ((ObservableCollection<object>)e.NewValue).CollectionChanged += AnnotatedListView.OnCollectionChanged;
-            //}
-            //else if (e.NewValue == null && e.OldValue != null)
-            //{
-            //    ((ObservableCollection<object>)e.OldValue).CollectionChanged -= AnnotatedListView.OnCollectionChanged;
-            //}
         }
 
         public ObservableCollection<Annotation> Annotations
@@ -72,6 +77,42 @@ namespace FeedNotify.Control
         {
             this.Loaded += this.OnLoaded;
             this.SizeChanged += this.OnSizeChanged;
+            this.SelectionChanged += this.OnSelectionChanged;
+        }
+
+        /// <inheritdoc />
+        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
+        {
+            base.OnItemsChanged(e);
+
+            if (!this.IsLoaded)
+            {
+                return;
+            }
+
+            IList<Annotation> obsolete = this.Annotations.Where(o => !this.Items.Contains(o.SourceItem)).ToList();
+            if (obsolete.Any())
+            {
+                this.RemoveAnnotations(obsolete);
+            }
+
+            this.MoveAnnotations(this.Annotations.ToList());
+        }
+
+        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            IList<Annotation> toBeRemoved = this.annotationDictionary.Keys
+                                                .Where(a => a.Type == AnnotationType.Selection && e.RemovedItems.Contains(a.SourceItem)).ToList();
+            if (toBeRemoved.Any())
+            {
+                this.RemoveAnnotations(toBeRemoved);
+            }
+
+            IList<Annotation> toBeAdded = e.AddedItems.OfType<object>().Select(o => new Annotation(o, AnnotationType.Selection)).ToList();
+            if (toBeAdded.Any())
+            {
+                this.AddAnnotations(toBeAdded);
+            }
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -119,7 +160,6 @@ namespace FeedNotify.Control
             return this.annotationCanvas != null;
         }
 
-        // Fill the Canvas with horizontal markers. Can be optimized.
         private void AnnotationCollectionChanged(object sender, NotifyCollectionChangedEventArgs cce)
         {
             switch (cce.Action)
@@ -177,9 +217,10 @@ namespace FeedNotify.Control
                     continue;
                 }
 
-                int p = this.CalcPosition(o.SourceItem, itemHeights, height, sumHeight);
+                double p = this.CalcPosition(o.SourceItem, itemHeights, height, sumHeight);
+                SolidColorBrush brush = o.Type == AnnotationType.Selection ? Brushes.DodgerBlue : Brushes.Orange;
 
-                Line line = new Line() { X1 = 0, Y1 = p, X2 = width, Y2 = p, StrokeThickness = 2, Stroke = Brushes.Orange };
+                Line line = new Line() { X1 = 0, Y1 = p, X2 = width, Y2 = p, StrokeThickness = 2, Stroke = brush };
                 this.annotationCanvas.Children.Add(line);
 
                 this.annotationDictionary.Add(o, line);
@@ -205,14 +246,14 @@ namespace FeedNotify.Control
                     continue;
                 }
 
-                int p = this.CalcPosition(o.SourceItem, itemHeights, height, sumHeight);
+                double p = this.CalcPosition(o.SourceItem, itemHeights, height, sumHeight);
 
                 line.Y1 = p;
                 line.Y2 = p;
             }
         }
 
-        private int CalcPosition(object item, Dictionary<object, double> itemHeights, double height, double sumHeight)
+        private double CalcPosition(object item, Dictionary<object, double> itemHeights, double height, double sumHeight)
         {
             int index = this.Items.IndexOf(item);
             if (index < 0)
@@ -226,8 +267,7 @@ namespace FeedNotify.Control
                 calcedPos += itemHeights.Values.ToList().GetRange(0, index).Sum();
             }
 
-            int p = (int)(height * calcedPos / sumHeight);
-            return p;
+            return (height * calcedPos / sumHeight);
         }
 
         private Dictionary<object, double> GetItemHeights()
