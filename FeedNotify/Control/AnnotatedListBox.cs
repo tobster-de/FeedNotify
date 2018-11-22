@@ -13,7 +13,13 @@ namespace FeedNotify.Control
 {
     public sealed class AnnotatedListBox : ListBox
     {
-        public enum AnnotationType
+        public enum AnnotationStyleEnum
+        {
+            Line,
+            Region
+        }
+
+        public enum AnnotationTypeEnum
         {
             Selection,
             Search
@@ -23,9 +29,9 @@ namespace FeedNotify.Control
         {
             public object SourceItem;
 
-            public AnnotationType Type;
+            public AnnotationTypeEnum Type;
 
-            public Annotation(object sourceItem, AnnotationType type)
+            public Annotation(object sourceItem, AnnotationTypeEnum type)
             {
                 this.SourceItem = sourceItem;
                 this.Type = type;
@@ -33,7 +39,7 @@ namespace FeedNotify.Control
         }
 
         private Canvas annotationCanvas;
-        
+
         private Dictionary<Annotation, FrameworkElement> annotationDictionary = new Dictionary<Annotation, FrameworkElement>();
 
         public static readonly DependencyProperty AnnotationsProperty =
@@ -42,6 +48,13 @@ namespace FeedNotify.Control
                 typeof(ObservableCollection<Annotation>),
                 typeof(AnnotatedListBox),
                 new UIPropertyMetadata(AnnotatedListBox.AnnotationsPropertyChanged));
+
+        public static readonly DependencyProperty AnnotationStyleProperty =
+            DependencyProperty.Register(
+                nameof(AnnotatedListBox.AnnotationStyle),
+                typeof(AnnotationStyleEnum),
+                typeof(AnnotatedListBox),
+                new UIPropertyMetadata(AnnotationStyleEnum.Line));
 
         private static void AnnotationsPropertyChanged(DependencyObject target, DependencyPropertyChangedEventArgs e)
         {
@@ -73,6 +86,12 @@ namespace FeedNotify.Control
             }
         }
 
+        public AnnotationStyleEnum AnnotationStyle
+        {
+            get => (AnnotationStyleEnum)this.GetValue(AnnotatedListBox.AnnotationStyleProperty);
+            set => this.SetValue(AnnotatedListBox.AnnotationStyleProperty, value);
+        }
+
         public AnnotatedListBox()
         {
             this.Loaded += this.OnLoaded;
@@ -96,19 +115,19 @@ namespace FeedNotify.Control
                 this.RemoveAnnotations(obsolete);
             }
 
-            this.MoveAnnotations(this.Annotations.ToList());
+            this.MoveAnnotations(this.annotationDictionary.Keys.ToList());
         }
 
         private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             IList<Annotation> toBeRemoved = this.annotationDictionary.Keys
-                                                .Where(a => a.Type == AnnotationType.Selection && e.RemovedItems.Contains(a.SourceItem)).ToList();
+                                                .Where(a => a.Type == AnnotationTypeEnum.Selection && e.RemovedItems.Contains(a.SourceItem)).ToList();
             if (toBeRemoved.Any())
             {
                 this.RemoveAnnotations(toBeRemoved);
             }
 
-            IList<Annotation> toBeAdded = e.AddedItems.OfType<object>().Select(o => new Annotation(o, AnnotationType.Selection)).ToList();
+            IList<Annotation> toBeAdded = e.AddedItems.OfType<object>().Select(o => new Annotation(o, AnnotationTypeEnum.Selection)).ToList();
             if (toBeAdded.Any())
             {
                 this.AddAnnotations(toBeAdded);
@@ -122,7 +141,7 @@ namespace FeedNotify.Control
                 return;
             }
 
-            this.MoveAnnotations(this.Annotations.ToList());
+            this.MoveAnnotations(this.annotationDictionary.Keys.ToList());
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
@@ -217,19 +236,43 @@ namespace FeedNotify.Control
                     continue;
                 }
 
-                double p = this.CalcPosition(o.SourceItem, itemHeights, height, sumHeight);
-                SolidColorBrush brush = o.Type == AnnotationType.Selection ? Brushes.DodgerBlue : Brushes.Orange;
+                SolidColorBrush brush = o.Type == AnnotationTypeEnum.Selection ? Brushes.DodgerBlue : Brushes.Orange;
 
-                Line line = new Line() { X1 = 0, Y1 = p, X2 = width, Y2 = p, StrokeThickness = 2, Stroke = brush };
-                this.annotationCanvas.Children.Add(line);
+                this.CalcPosition(o.SourceItem, itemHeights, out double begin, out double end);
 
-                this.annotationDictionary.Add(o, line);
+                Shape shape = null;
+                if (this.AnnotationStyle == AnnotationStyleEnum.Line)
+                {
+                    double avg = (end - begin) / 2 + begin;
+                    double p = (height * avg / sumHeight);
+                    shape = new Line() { X1 = 0, Y1 = p, X2 = width, Y2 = p, StrokeThickness = 2, Stroke = brush };
+                }
+                else if (this.AnnotationStyle == AnnotationStyleEnum.Region)
+                {
+                    double size = (end - begin);
+                    double h = (height * size / sumHeight);
+                    shape = new Rectangle() { Width = width, Height = (h > 2 ? h : 2), Fill = brush };
+                }
+
+                if (shape == null)
+                {
+                    continue;
+                }
+                
+                this.annotationDictionary.Add(o, shape);
+
+                this.annotationCanvas.Children.Add(shape);
+                if (this.AnnotationStyle == AnnotationStyleEnum.Region)
+                {
+                    double p = (height * begin / sumHeight);
+                    Canvas.SetTop(shape, p);
+                }
             }
         }
 
         private void MoveAnnotations(List<Annotation> annotations)
         {
-            if (!this.CheckAnnotationCanvas())
+            if (!this.CheckAnnotationCanvas() || !annotations.Any())
             {
                 return;
             }
@@ -241,33 +284,51 @@ namespace FeedNotify.Control
             foreach (Annotation o in annotations)
             {
                 if (!this.annotationDictionary.TryGetValue(o, out FrameworkElement fe)
-                    || !(fe is Line line))
+                    || !(fe is Shape))
                 {
                     continue;
                 }
 
-                double p = this.CalcPosition(o.SourceItem, itemHeights, height, sumHeight);
+                this.CalcPosition(o.SourceItem, itemHeights, out double begin, out double end);
+                if (this.AnnotationStyle == AnnotationStyleEnum.Line && fe is Line line)
+                {
+                    double avg = (end - begin) / 2 + begin;
+                    double p = (height * avg / sumHeight);
 
-                line.Y1 = p;
-                line.Y2 = p;
+                    line.Y1 = p;
+                    line.Y2 = p;
+                }
+                else if (this.AnnotationStyle == AnnotationStyleEnum.Region && fe is Rectangle rect)
+                {
+                    double size = (end - begin);
+                    double h = (height * size / sumHeight);
+                    rect.Height = h > 2 ? h : 2;
+                    double p = (height * begin / sumHeight);
+                    Canvas.SetTop(rect, p);
+                }
             }
         }
 
-        private double CalcPosition(object item, Dictionary<object, double> itemHeights, double height, double sumHeight)
+        private void CalcPosition(
+            object item,
+            Dictionary<object, double> itemHeights,
+            out double begin,
+            out double end)
         {
+            begin = -1;
+            end = -1;
+
             int index = this.Items.IndexOf(item);
             if (index < 0)
             {
-                return -1;
+                return;
             }
 
-            double calcedPos = itemHeights[item] / 2;
-            if (index > 0)
+            if (index >= 0)
             {
-                calcedPos += itemHeights.Values.ToList().GetRange(0, index).Sum();
+                begin = itemHeights.Values.ToList().GetRange(0, index).Sum();
+                end = begin + itemHeights[item];
             }
-
-            return (height * calcedPos / sumHeight);
         }
 
         private Dictionary<object, double> GetItemHeights()

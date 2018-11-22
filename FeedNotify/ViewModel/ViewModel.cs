@@ -249,7 +249,7 @@ namespace FeedNotify.ViewModel
             IList<FeedItem> toBeAdded = toBeAnnotated.Except(this.Annotations.Select(a => a.SourceItem)).OfType<FeedItem>().ToList();
             foreach (FeedItem feedItem in toBeAdded)
             {
-                this.Annotations.Add(new AnnotatedListBox.Annotation(feedItem, AnnotatedListBox.AnnotationType.Search ));
+                this.Annotations.Add(new AnnotatedListBox.Annotation(feedItem, AnnotatedListBox.AnnotationTypeEnum.Search ));
             }
         }
 

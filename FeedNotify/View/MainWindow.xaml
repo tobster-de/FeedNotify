@@ -76,6 +76,7 @@
 
         <control:AnnotatedListBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" x:Name="ListBox"
                                   Annotations="{Binding Annotations, UpdateSourceTrigger=PropertyChanged}"
+                                  AnnotationStyle="Region"
                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                   ItemsSource="{Binding Source={StaticResource ResourceKey=ItemsView}}">
             <ListBox.ItemTemplate>
