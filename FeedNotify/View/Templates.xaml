@@ -9,6 +9,8 @@
     <Color x:Key="ControlMediumColor">#BEBEBE</Color>
     <Color x:Key="ControlDarkColor">#6F6F70</Color>
 
+    <Color x:Key="BackMouseOverColor">#CDCDCD</Color>
+
     <Color x:Key="ControlMouseOverColor">#AFAFAF</Color>
     <Color x:Key="ControlPressedColor">#6F6F70</Color>
 
@@ -59,10 +61,10 @@
                                 <VisualState x:Name="Normal" />
                                 <VisualState x:Name="MouseOver">
                                     <Storyboard>
-                                        <!--<ColorAnimationUsingKeyFrames Storyboard.TargetName="Border"
-                                                                      Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)">
-                                            <EasingColorKeyFrame KeyTime="0" Value="{StaticResource ControlMouseOverColor}" />
-                                        </ColorAnimationUsingKeyFrames>-->
+                                        <ColorAnimationUsingKeyFrames Storyboard.TargetName="Border"
+                                                                      Storyboard.TargetProperty="(Background).(Color)">
+                                            <EasingColorKeyFrame KeyTime="0" Value="{StaticResource BackMouseOverColor}" />
+                                        </ColorAnimationUsingKeyFrames>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetName="Arrow"
                                                                       Storyboard.TargetProperty="(Fill).(Color)">
                                             <EasingColorKeyFrame KeyTime="0" Value="{StaticResource GlyphMouseOverColor}" />
@@ -71,10 +73,10 @@
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <Storyboard>
-                                        <!--<ColorAnimationUsingKeyFrames Storyboard.TargetName="Border"
-                                                                      Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)">
-                                            <EasingColorKeyFrame KeyTime="0" Value="{StaticResource ControlMouseOverColor}" />
-                                        </ColorAnimationUsingKeyFrames>-->
+                                        <ColorAnimationUsingKeyFrames Storyboard.TargetName="Border"
+                                                                      Storyboard.TargetProperty="(Background).(Color)">
+                                            <EasingColorKeyFrame KeyTime="0" Value="{StaticResource BackMouseOverColor}" />
+                                        </ColorAnimationUsingKeyFrames>
                                         <ColorAnimationUsingKeyFrames Storyboard.TargetName="Arrow"
                                                                       Storyboard.TargetProperty="(Fill).(Color)">
                                             <EasingColorKeyFrame KeyTime="0" Value="{StaticResource GlyphPressedColor}" />
