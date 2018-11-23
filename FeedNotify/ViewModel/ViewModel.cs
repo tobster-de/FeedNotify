@@ -43,6 +43,8 @@ namespace FeedNotify.ViewModel
 
         private string filterText;
 
+        private int maxFeedAge;
+
         #endregion
 
         #region Constructors and Destructors
@@ -66,6 +68,7 @@ namespace FeedNotify.ViewModel
         {
             Settings settings = Properties.Settings.Default;
             this.reloadInterval = settings.Interval;
+            this.maxFeedAge = settings.MaxAge;
 
             if (settings.Feeds != null && settings.Feeds.Any())
             {
@@ -146,18 +149,21 @@ namespace FeedNotify.ViewModel
 
                 //string[] urls = { "http://www.heise.de/newsticker/heise-atom.xml", "http://rss.golem.de/rss.php?feed=RSS2.0" };
 
-                var feeds = new List<SyndicationFeed>();
-                foreach (var url in this.Feeds)
+                List<SyndicationFeed> feeds = new List<SyndicationFeed>();
+                foreach (string url in this.Feeds)
                 {
-                    var reader = XmlReader.Create(url);
+                    XmlReader reader = XmlReader.Create(url);
                     feeds.Add(SyndicationFeed.Load(reader));
                     reader.Close();
                 }
 
-                var newFeedItems = new List<FeedItem>();
-                foreach (var feed in feeds)
+                List<FeedItem> newFeedItems = new List<FeedItem>();
+                foreach (SyndicationFeed feed in feeds)
                 {
-                    newFeedItems.AddRange(feed.Items.Select(item => new FeedItem(feed, item)).Except(this.FeedItems));
+                    IEnumerable<SyndicationItem> youngEnough
+                        = feed.Items.Where(i => (DateTime.Now - i.LastUpdatedTime).Days <= this.maxFeedAge
+                                                || (DateTime.Now - i.PublishDate).Days <= this.maxFeedAge);
+                    newFeedItems.AddRange(youngEnough.Select(item => new FeedItem(feed, item)).Except(this.FeedItems));
                 }
 
                 IList<FeedItem> newest = newFeedItems.OrderByDescending(item => item.Publish).Take(3).ToList();
@@ -209,7 +215,7 @@ namespace FeedNotify.ViewModel
         private void StartLoading(bool notify = true)
         {
             this.InitTimeout();
-            var task = new Task(() => { this.Load(notify); });
+            Task task = new Task(() => { this.Load(notify); });
             task.Start();
         }
 
@@ -218,7 +224,7 @@ namespace FeedNotify.ViewModel
             SettingsWindow settingsWindow = new SettingsWindow();
             if (settingsWindow.ShowDialog().GetValueOrDefault())
             {
-                var settingsViewModel = ((SettingsViewModel)settingsWindow.DataContext);
+                SettingsViewModel settingsViewModel = ((SettingsViewModel)settingsWindow.DataContext);
                 this.Feeds = new List<string>(settingsViewModel.Feeds);
 
                 this.reloadInterval = settingsViewModel.Interval;
@@ -241,7 +247,7 @@ namespace FeedNotify.ViewModel
                     : new List<FeedItem>();
 
             IList<AnnotatedListBox.Annotation> toBeRemoved = this.Annotations.Where(a => !toBeAnnotated.Contains(a.SourceItem)).ToList();
-            foreach (var anno in toBeRemoved)
+            foreach (AnnotatedListBox.Annotation anno in toBeRemoved)
             {
                 this.Annotations.Remove(anno);
             }

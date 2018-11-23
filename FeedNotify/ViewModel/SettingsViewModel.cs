@@ -53,10 +53,13 @@ namespace FeedNotify.ViewModel
             }
         }
 
+        public int MaxAge { get; set; }
+
         public SettingsViewModel()
         {
             Settings settings = Properties.Settings.Default;
             this.Interval = settings.Interval;
+            this.MaxAge = settings.MaxAge;
 
             if (settings.Feeds != null && settings.Feeds.Any())
             {
@@ -67,6 +70,7 @@ namespace FeedNotify.ViewModel
         private void SaveAndClose()
         {
             Properties.Settings.Default.Interval = this.Interval;
+            Properties.Settings.Default.MaxAge = this.MaxAge;
 
             var feeds = new List<string>();
             this.FeedsText.Split('\n').ToList().ForEach(s => feeds.Add(s.Trim().Trim('\r', '\n')));

@@ -25,6 +25,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -41,7 +42,11 @@
         <xctk:IntegerUpDown Grid.Row="2" Grid.Column="1" Margin="3"
                             Value="{Binding Interval, Mode=TwoWay}"/>
 
-        <Button Content="OK" Grid.Row="3" Grid.Column="1" Width="75" HorizontalAlignment="Right" Margin="3"
+        <Label Grid.Row="3" Content="Max. Alter (d):"/>
+        <xctk:IntegerUpDown Grid.Row="3" Grid.Column="1" Margin="3"
+                            Value="{Binding MaxAge, Mode=TwoWay}"/>
+
+        <Button Content="OK" Grid.Row="4" Grid.Column="1" Width="75" HorizontalAlignment="Right" Margin="3"
                 Command="{Binding OkCommand, Mode=OneWay}" 
                 CommandParameter="{Binding ElementName=SettingsWindowElement}"/>
     </Grid>
