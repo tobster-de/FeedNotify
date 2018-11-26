@@ -96,14 +96,11 @@ namespace FeedNotify.Control
         {
             this.Loaded += this.OnLoaded;
             this.SizeChanged += this.OnSizeChanged;
-            this.SelectionChanged += this.OnSelectionChanged;
+            this.ItemContainerGenerator.ItemsChanged += (sender, args) => this.OnItemsChanged(args);
         }
 
-        /// <inheritdoc />
-        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
+        private void OnItemsChanged(ItemsChangedEventArgs e)
         {
-            base.OnItemsChanged(e);
-
             if (!this.IsLoaded)
             {
                 return;
@@ -118,8 +115,11 @@ namespace FeedNotify.Control
             this.MoveAnnotations(this.annotationDictionary.Keys.ToList());
         }
 
-        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        /// <inheritdoc />
+        protected override void OnSelectionChanged(SelectionChangedEventArgs e)
         {
+            base.OnSelectionChanged(e);
+
             IList<Annotation> toBeRemoved = this.annotationDictionary.Keys
                                                 .Where(a => a.Type == AnnotationTypeEnum.Selection && e.RemovedItems.Contains(a.SourceItem)).ToList();
             if (toBeRemoved.Any())
@@ -258,7 +258,7 @@ namespace FeedNotify.Control
                 {
                     continue;
                 }
-                
+
                 this.annotationDictionary.Add(o, shape);
 
                 this.annotationCanvas.Children.Add(shape);
@@ -326,7 +326,7 @@ namespace FeedNotify.Control
 
             if (index >= 0)
             {
-                begin = itemHeights.Values.ToList().GetRange(0, index).Sum();
+                begin = itemHeights.Values.ToList().Take(index).Sum();
                 end = begin + itemHeights[item];
             }
         }
