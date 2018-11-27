@@ -96,12 +96,44 @@ namespace FeedNotify.Control
         {
             this.Loaded += this.OnLoaded;
             this.SizeChanged += this.OnSizeChanged;
-            this.ItemContainerGenerator.ItemsChanged += (sender, args) => this.OnItemsChanged(args);
         }
 
-        private void OnItemsChanged(ItemsChangedEventArgs e)
+        /// <inheritdoc />
+        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (!this.IsLoaded)
+            base.OnItemsChanged(e);
+
+            if (!this.IsLoaded || !this.Annotations.Any())
+            {
+                return;
+            }
+
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                this.ItemContainerGenerator.StatusChanged += this.WaitForItemGenerator;
+                using (this.ItemContainerGenerator.GenerateBatches())
+                {
+                    ((IItemContainerGenerator)this.ItemContainerGenerator).GenerateNext();
+                }
+            }
+            else
+            {
+                this.UpdateAnnotations();
+            }
+        }
+
+        private void WaitForItemGenerator(object sender, EventArgs e)
+        {
+            if (this.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
+            {
+                this.ItemContainerGenerator.StatusChanged -= this.WaitForItemGenerator;
+                this.UpdateAnnotations();
+            }
+        }
+
+        public void UpdateAnnotations()
+        {
+            if (!this.IsLoaded || !this.Annotations.Any())
             {
                 return;
             }
@@ -337,6 +369,11 @@ namespace FeedNotify.Control
             foreach (object item in this.Items)
             {
                 DependencyObject container = this.ItemContainerGenerator.ContainerFromItem(item);
+
+                if (container == null)
+                {
+
+                }
 
                 if (container is FrameworkElement fe)
                 {

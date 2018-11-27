@@ -186,6 +186,8 @@ namespace FeedNotify.ViewModel
                                 this.notificationWindow.Show();
                             }
                         }
+                        
+                        this.SyncAnnotations();
                     });
             }
             finally
