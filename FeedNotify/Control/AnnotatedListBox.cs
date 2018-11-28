@@ -236,7 +236,7 @@ namespace FeedNotify.Control
             {
                 if (this.annotationDictionary.TryGetValue(o, out FrameworkElement fe))
                 {
-                    fe.MouseLeftButtonUp -= this.ClickAnnotation;
+                    fe.MouseLeftButtonDown -= this.ClickAnnotation;
 
                     this.annotationCanvas.Children.Remove(fe);
                     this.annotationDictionary.Remove(o);
@@ -300,7 +300,7 @@ namespace FeedNotify.Control
                 if (o.Type == AnnotationTypeEnum.Search)
                 {
                     shape.Cursor = Cursors.Hand;
-                    shape.MouseLeftButtonUp += this.ClickAnnotation;
+                    shape.MouseLeftButtonDown += this.ClickAnnotation;
                 }
             }
 
@@ -323,7 +323,9 @@ namespace FeedNotify.Control
             if (item != null)
             {
                 this.SelectedItem = item;
-                this.ScrollIntoView(item);
+                this.GetItemLocation(item, out double top, out double itemheight);
+                ScrollViewer scrollViewer = AnnotatedListBox.GetVisualChild<ScrollViewer>(this);
+                scrollViewer?.ScrollToVerticalOffset(top - scrollViewer.ViewportHeight / 2 + itemheight / 2);
             }
         }
 
