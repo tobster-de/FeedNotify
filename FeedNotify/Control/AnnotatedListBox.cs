@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
@@ -235,6 +236,8 @@ namespace FeedNotify.Control
             {
                 if (this.annotationDictionary.TryGetValue(o, out FrameworkElement fe))
                 {
+                    fe.MouseLeftButtonUp -= this.ClickAnnotation;
+
                     this.annotationCanvas.Children.Remove(fe);
                     this.annotationDictionary.Remove(o);
                 }
@@ -293,11 +296,34 @@ namespace FeedNotify.Control
                     double p = (height * begin / sumHeight);
                     Canvas.SetTop(shape, p);
                 }
+
+                if (o.Type == AnnotationTypeEnum.Search)
+                {
+                    shape.Cursor = Cursors.Hand;
+                    shape.MouseLeftButtonUp += this.ClickAnnotation;
+                }
             }
 
             if (!hasAllHeights)
             {
                 this.Dispatcher.InvokeAsync(() => { this.UpdateAnnotations(); }, DispatcherPriority.Background);
+            }
+        }
+
+        private void ClickAnnotation(object sender, MouseButtonEventArgs e)
+        {
+            if (!(sender is FrameworkElement fe))
+            {
+                return;
+            }
+
+            KeyValuePair<Annotation, FrameworkElement> entry = this.annotationDictionary.FirstOrDefault(kv => object.Equals(kv.Value, fe));
+            object item = entry.Key.SourceItem;
+
+            if (item != null)
+            {
+                this.SelectedItem = item;
+                this.ScrollIntoView(item);
             }
         }
 
