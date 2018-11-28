@@ -251,10 +251,11 @@ namespace FeedNotify.Control
                 return;
             }
 
-            double height = this.annotationCanvas.ActualHeight;
+            Panel panel = AnnotatedListBox.GetVisualChild<StackPanel>(this);
+            double panelHeight = panel.ActualHeight;
+            double canvasHeight = this.annotationCanvas.ActualHeight;
             double width = this.annotationCanvas.ActualWidth;
-            bool hasAllHeights = this.GetItemHeights(out Dictionary<object, double> itemHeights);
-            double sumHeight = itemHeights.Values.Sum();
+            bool hasAllHeights = true;
 
             foreach (Annotation o in newAnnotations)
             {
@@ -265,19 +266,18 @@ namespace FeedNotify.Control
 
                 SolidColorBrush brush = o.Type == AnnotationTypeEnum.Selection ? Brushes.DodgerBlue : Brushes.Orange;
 
-                this.CalcPosition(o.SourceItem, itemHeights, out double begin, out double end);
+                hasAllHeights &= this.GetItemLocation(o.SourceItem, out double top, out double itemHeight);
 
                 Shape shape = null;
                 if (this.AnnotationStyle == AnnotationStyleEnum.Line)
                 {
-                    double avg = (end - begin) / 2 + begin;
-                    double p = (height * avg / sumHeight);
+                    double avg = itemHeight / 2 + top;
+                    double p = (canvasHeight * avg / panelHeight);
                     shape = new Line() { X1 = 0, Y1 = p, X2 = width, Y2 = p, StrokeThickness = 2, Stroke = brush };
                 }
                 else if (this.AnnotationStyle == AnnotationStyleEnum.Region)
                 {
-                    double size = (end - begin);
-                    double h = (height * size / sumHeight);
+                    double h = (canvasHeight * itemHeight / panelHeight);
                     shape = new Rectangle() { Width = width, Height = (h > 2 ? h : 2), Fill = brush };
                 }
 
@@ -286,14 +286,14 @@ namespace FeedNotify.Control
                     continue;
                 }
 
-                shape.Visibility = hasAllHeights ? Visibility.Visible : Visibility.Hidden;
+                //shape.Visibility = hasAllHeights ? Visibility.Visible : Visibility.Hidden;
 
                 this.annotationDictionary.Add(o, shape);
 
                 this.annotationCanvas.Children.Add(shape);
                 if (this.AnnotationStyle == AnnotationStyleEnum.Region)
                 {
-                    double p = (height * begin / sumHeight);
+                    double p = (canvasHeight * top / panelHeight);
                     Canvas.SetTop(shape, p);
                 }
 
@@ -334,9 +334,10 @@ namespace FeedNotify.Control
                 return;
             }
 
-            double height = this.annotationCanvas.ActualHeight;
-            bool hasAllHeights = this.GetItemHeights(out Dictionary<object, double> itemHeights);
-            double sumHeight = itemHeights.Values.Sum();
+            Panel panel = AnnotatedListBox.GetVisualChild<StackPanel>(this);
+            double panelHeigth = panel.ActualHeight;
+            double canvasHeight = this.annotationCanvas.ActualHeight;
+            bool hasAllHeights = true;
 
             foreach (Annotation o in annotations)
             {
@@ -346,23 +347,23 @@ namespace FeedNotify.Control
                     continue;
                 }
 
-                fe.Visibility = hasAllHeights ? Visibility.Visible : Visibility.Hidden;
+                //fe.Visibility = hasAllHeights ? Visibility.Visible : Visibility.Hidden;
 
-                this.CalcPosition(o.SourceItem, itemHeights, out double begin, out double end);
+                hasAllHeights &= this.GetItemLocation(o.SourceItem, out double top, out double itemheight);
+
                 if (this.AnnotationStyle == AnnotationStyleEnum.Line && fe is Line line)
                 {
-                    double avg = (end - begin) / 2 + begin;
-                    double p = (height * avg / sumHeight);
+                    double avg = itemheight / 2 + top;
+                    double p = (canvasHeight * avg / panelHeigth);
 
                     line.Y1 = p;
                     line.Y2 = p;
                 }
                 else if (this.AnnotationStyle == AnnotationStyleEnum.Region && fe is Rectangle rect)
                 {
-                    double size = (end - begin);
-                    double h = (height * size / sumHeight);
+                    double h = (canvasHeight * itemheight / panelHeigth);
                     rect.Height = h > 2 ? h : 2;
-                    double p = (height * begin / sumHeight);
+                    double p = (canvasHeight * top / panelHeigth);
                     Canvas.SetTop(rect, p);
                 }
             }
@@ -373,49 +374,33 @@ namespace FeedNotify.Control
             }
         }
 
-        private void CalcPosition(
-            object item,
-            Dictionary<object, double> itemHeights,
-            out double begin,
-            out double end)
+        private bool GetItemLocation(object item, out double top, out double height)
         {
-            begin = -1;
-            end = -1;
+            top = 0;
+            height = 1;
 
-            int index = this.Items.IndexOf(item);
-            if (index < 0)
+            Panel panel = AnnotatedListBox.GetVisualChild<StackPanel>(this);
+            if (panel == null)
             {
-                return;
+                return false;
             }
 
-            if (index >= 0)
+            DependencyObject container = this.ItemContainerGenerator.ContainerFromItem(item);
+            if (container == null)
             {
-                begin = itemHeights.Values.ToList().Take(index).Sum();
-                end = begin + itemHeights[item];
-            }
-        }
-
-        private bool GetItemHeights(out Dictionary<object, double> itemHeights)
-        {
-            bool result = true;
-            itemHeights = new Dictionary<object, double>();
-
-            foreach (object item in this.Items)
-            {
-                DependencyObject container = this.ItemContainerGenerator.ContainerFromItem(item);
-
-                if (container == null)
-                {
-                    result = false;
-                }
-
-                if (container is FrameworkElement fe)
-                {
-                    itemHeights.Add(item, fe.ActualHeight);
-                }
+                return false;
             }
 
-            return result;
+            if (container is FrameworkElement fe)
+            {
+                GeneralTransform positionTransform = fe.TransformToAncestor(panel);
+                Point location = positionTransform.Transform(new Point(0, 0));
+
+                top = location.Y;
+                height = fe.ActualHeight;
+            }
+
+            return true;
         }
     }
 }
