@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace FeedNotify.Control
 {
@@ -56,6 +57,8 @@ namespace FeedNotify.Control
                 typeof(AnnotatedListBox),
                 new UIPropertyMetadata(AnnotationStyleEnum.Line));
 
+        private bool annotationUpdateRequired;
+
         private static void AnnotationsPropertyChanged(DependencyObject target, DependencyPropertyChangedEventArgs e)
         {
             if (!(target is AnnotatedListBox control))
@@ -96,6 +99,8 @@ namespace FeedNotify.Control
         {
             this.Loaded += this.OnLoaded;
             this.SizeChanged += this.OnSizeChanged;
+
+            this.annotationUpdateRequired = false;
         }
 
         /// <inheritdoc />
@@ -110,26 +115,11 @@ namespace FeedNotify.Control
 
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                this.ItemContainerGenerator.StatusChanged += this.WaitForItemGenerator;
-                using (this.ItemContainerGenerator.GenerateBatches())
-                {
-                    ((IItemContainerGenerator)this.ItemContainerGenerator).GenerateNext();
-                }
-            }
-            else
-            {
-                this.UpdateAnnotations();
+                this.annotationUpdateRequired = true;
+                this.Dispatcher.InvokeAsync(() => { this.UpdateAnnotations(); }, DispatcherPriority.Background);
             }
         }
 
-        private void WaitForItemGenerator(object sender, EventArgs e)
-        {
-            if (this.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
-            {
-                this.ItemContainerGenerator.StatusChanged -= this.WaitForItemGenerator;
-                this.UpdateAnnotations();
-            }
-        }
 
         public void UpdateAnnotations()
         {
@@ -137,6 +127,8 @@ namespace FeedNotify.Control
             {
                 return;
             }
+
+            this.annotationUpdateRequired = false;
 
             IList<Annotation> obsolete = this.Annotations.Where(o => !this.Items.Contains(o.SourceItem)).ToList();
             if (obsolete.Any())
@@ -258,7 +250,7 @@ namespace FeedNotify.Control
 
             double height = this.annotationCanvas.ActualHeight;
             double width = this.annotationCanvas.ActualWidth;
-            Dictionary<object, double> itemHeights = this.GetItemHeights();
+            bool hasAllHeights = this.GetItemHeights(out Dictionary<object, double> itemHeights);
             double sumHeight = itemHeights.Values.Sum();
 
             foreach (Annotation o in newAnnotations)
@@ -291,6 +283,8 @@ namespace FeedNotify.Control
                     continue;
                 }
 
+                shape.Visibility = hasAllHeights ? Visibility.Visible : Visibility.Hidden;
+
                 this.annotationDictionary.Add(o, shape);
 
                 this.annotationCanvas.Children.Add(shape);
@@ -299,6 +293,11 @@ namespace FeedNotify.Control
                     double p = (height * begin / sumHeight);
                     Canvas.SetTop(shape, p);
                 }
+            }
+
+            if (!hasAllHeights)
+            {
+                this.Dispatcher.InvokeAsync(() => { this.UpdateAnnotations(); }, DispatcherPriority.Background);
             }
         }
 
@@ -310,7 +309,7 @@ namespace FeedNotify.Control
             }
 
             double height = this.annotationCanvas.ActualHeight;
-            Dictionary<object, double> itemHeights = this.GetItemHeights();
+            bool hasAllHeights = this.GetItemHeights(out Dictionary<object, double> itemHeights);
             double sumHeight = itemHeights.Values.Sum();
 
             foreach (Annotation o in annotations)
@@ -320,6 +319,8 @@ namespace FeedNotify.Control
                 {
                     continue;
                 }
+
+                fe.Visibility = hasAllHeights ? Visibility.Visible : Visibility.Hidden;
 
                 this.CalcPosition(o.SourceItem, itemHeights, out double begin, out double end);
                 if (this.AnnotationStyle == AnnotationStyleEnum.Line && fe is Line line)
@@ -338,6 +339,11 @@ namespace FeedNotify.Control
                     double p = (height * begin / sumHeight);
                     Canvas.SetTop(rect, p);
                 }
+            }
+
+            if (!hasAllHeights)
+            {
+                this.Dispatcher.InvokeAsync(() => { this.UpdateAnnotations(); }, DispatcherPriority.Background);
             }
         }
 
@@ -363,16 +369,18 @@ namespace FeedNotify.Control
             }
         }
 
-        private Dictionary<object, double> GetItemHeights()
+        private bool GetItemHeights(out Dictionary<object, double> itemHeights)
         {
-            Dictionary<object, double> itemHeights = new Dictionary<object, double>();
+            bool result = true;
+            itemHeights = new Dictionary<object, double>();
+
             foreach (object item in this.Items)
             {
                 DependencyObject container = this.ItemContainerGenerator.ContainerFromItem(item);
 
                 if (container == null)
                 {
-
+                    result = false;
                 }
 
                 if (container is FrameworkElement fe)
@@ -381,7 +389,7 @@ namespace FeedNotify.Control
                 }
             }
 
-            return itemHeights;
+            return result;
         }
     }
 }
