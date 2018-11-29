@@ -78,6 +78,7 @@
                                   Annotations="{Binding Annotations, UpdateSourceTrigger=PropertyChanged}"
                                   AnnotationStyle="Region"
                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ScrollViewer.VerticalScrollBarVisibility="Visible"
                                   ItemsSource="{Binding Source={StaticResource ResourceKey=ItemsView}}">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type data:FeedItem}">

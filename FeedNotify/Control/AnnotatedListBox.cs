@@ -57,8 +57,8 @@ namespace FeedNotify.Control
                 typeof(AnnotationStyleEnum),
                 typeof(AnnotatedListBox),
                 new UIPropertyMetadata(AnnotationStyleEnum.Line));
-
-        private bool annotationUpdateRequired;
+        
+        private StackPanel itemPanel;
 
         private static void AnnotationsPropertyChanged(DependencyObject target, DependencyPropertyChangedEventArgs e)
         {
@@ -96,12 +96,65 @@ namespace FeedNotify.Control
             set => this.SetValue(AnnotatedListBox.AnnotationStyleProperty, value);
         }
 
+        private Canvas AnnotationCanvas
+        {
+            get
+            {
+                if (this.annotationCanvas != null)
+                {
+                    return this.annotationCanvas;
+                }
+
+                ScrollBar scrollBar = AnnotatedListBox.GetVisualChild<ScrollBar>(this);
+                this.annotationCanvas = (Canvas)scrollBar.Template.FindName("AnnotationCanvas", scrollBar);
+
+                if (this.annotationCanvas != null)
+                {
+                    Rectangle background = (Rectangle)scrollBar.Template.FindName("AnnotationBackground", scrollBar);
+                    background.MouseLeftButtonDown += this.BackgroundOnMouseLeftButtonDown;
+                }
+
+                return this.annotationCanvas;
+            }
+        }
+
+        private void BackgroundOnMouseLeftButtonDown(object sender, MouseButtonEventArgs args)
+        {
+            if (!(sender is FrameworkElement fe))
+            {
+                return;
+            }
+
+            ScrollBar scrollBar = AnnotatedListBox.GetVisualChild<ScrollBar>(this);
+            double value = scrollBar.Track.ValueFromPoint(args.GetPosition(fe));
+
+            if (value < scrollBar.Track.Value)
+            {
+                ScrollBar.PageUpCommand.Execute(null, scrollBar);
+            }
+            else
+            {
+                ScrollBar.PageDownCommand.Execute(null, scrollBar);
+            }
+        }
+
+        private Panel ItemPanel
+        {
+            get
+            {
+                if (this.itemPanel != null)
+                {
+                    return this.itemPanel;
+                }
+
+                this.itemPanel = AnnotatedListBox.GetVisualChild<StackPanel>(this);
+                return this.itemPanel;
+            }
+        }
+
         public AnnotatedListBox()
         {
-            this.Loaded += this.OnLoaded;
             this.SizeChanged += this.OnSizeChanged;
-
-            this.annotationUpdateRequired = false;
         }
 
         /// <inheritdoc />
@@ -116,11 +169,9 @@ namespace FeedNotify.Control
 
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                this.annotationUpdateRequired = true;
                 this.Dispatcher.InvokeAsync(() => { this.UpdateAnnotations(); }, DispatcherPriority.Background);
             }
         }
-
 
         public void UpdateAnnotations()
         {
@@ -128,8 +179,6 @@ namespace FeedNotify.Control
             {
                 return;
             }
-
-            this.annotationUpdateRequired = false;
 
             IList<Annotation> obsolete = this.Annotations.Where(o => !this.Items.Contains(o.SourceItem)).ToList();
             if (obsolete.Any())
@@ -169,11 +218,6 @@ namespace FeedNotify.Control
             this.MoveAnnotations(this.annotationDictionary.Keys.ToList());
         }
 
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            this.CheckAnnotationCanvas();
-        }
-
         private static T GetVisualChild<T>(DependencyObject parent) where T : Visual
         {
             T child = default(T);
@@ -189,19 +233,6 @@ namespace FeedNotify.Control
                 }
             }
             return child;
-        }
-
-        private bool CheckAnnotationCanvas()
-        {
-            if (this.annotationCanvas != null)
-            {
-                return true;
-            }
-
-            ScrollBar scrollBar = AnnotatedListBox.GetVisualChild<ScrollBar>(this);
-            this.annotationCanvas = (Canvas)scrollBar.Template.FindName("AnnotationCanvas", scrollBar);
-
-            return this.annotationCanvas != null;
         }
 
         private void AnnotationCollectionChanged(object sender, NotifyCollectionChangedEventArgs cce)
@@ -227,7 +258,7 @@ namespace FeedNotify.Control
 
         private void RemoveAnnotations(IList<Annotation> annotations)
         {
-            if (!this.CheckAnnotationCanvas())
+            if (this.AnnotationCanvas == null)
             {
                 return;
             }
@@ -246,15 +277,14 @@ namespace FeedNotify.Control
 
         private void AddAnnotations(IList<Annotation> newAnnotations)
         {
-            if (!this.CheckAnnotationCanvas())
+            if (this.AnnotationCanvas == null || this.ItemPanel == null)
             {
                 return;
             }
 
-            Panel panel = AnnotatedListBox.GetVisualChild<StackPanel>(this);
-            double panelHeight = panel.ActualHeight;
-            double canvasHeight = this.annotationCanvas.ActualHeight;
-            double width = this.annotationCanvas.ActualWidth;
+            double panelHeight = this.ItemPanel.ActualHeight;
+            double canvasHeight = this.AnnotationCanvas.ActualHeight;
+            double width = this.AnnotationCanvas.ActualWidth;
             bool hasAllHeights = true;
 
             foreach (Annotation o in newAnnotations)
@@ -290,7 +320,7 @@ namespace FeedNotify.Control
 
                 this.annotationDictionary.Add(o, shape);
 
-                this.annotationCanvas.Children.Add(shape);
+                this.AnnotationCanvas.Children.Add(shape);
                 if (this.AnnotationStyle == AnnotationStyleEnum.Region)
                 {
                     double p = (canvasHeight * top / panelHeight);
@@ -331,14 +361,13 @@ namespace FeedNotify.Control
 
         private void MoveAnnotations(List<Annotation> annotations)
         {
-            if (!this.CheckAnnotationCanvas() || !annotations.Any())
+            if (this.AnnotationCanvas == null || this.ItemPanel == null || !annotations.Any())
             {
                 return;
             }
 
-            Panel panel = AnnotatedListBox.GetVisualChild<StackPanel>(this);
-            double panelHeigth = panel.ActualHeight;
-            double canvasHeight = this.annotationCanvas.ActualHeight;
+            double panelHeigth = this.ItemPanel.ActualHeight;
+            double canvasHeight = this.AnnotationCanvas.ActualHeight;
             bool hasAllHeights = true;
 
             foreach (Annotation o in annotations)
@@ -381,8 +410,7 @@ namespace FeedNotify.Control
             top = 0;
             height = 1;
 
-            Panel panel = AnnotatedListBox.GetVisualChild<StackPanel>(this);
-            if (panel == null)
+            if (this.ItemPanel == null)
             {
                 return false;
             }
@@ -395,7 +423,7 @@ namespace FeedNotify.Control
 
             if (container is FrameworkElement fe)
             {
-                GeneralTransform positionTransform = fe.TransformToAncestor(panel);
+                GeneralTransform positionTransform = fe.TransformToAncestor(this.ItemPanel);
                 Point location = positionTransform.Transform(new Point(0, 0));
 
                 top = location.Y;
