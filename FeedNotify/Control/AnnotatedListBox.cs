@@ -327,7 +327,7 @@ namespace FeedNotify.Control
                     Canvas.SetTop(shape, p);
                 }
 
-                if (o.Type == AnnotationTypeEnum.Search)
+                //if (o.Type == AnnotationTypeEnum.Search)
                 {
                     shape.Cursor = Cursors.Hand;
                     shape.MouseLeftButtonDown += this.ClickAnnotation;

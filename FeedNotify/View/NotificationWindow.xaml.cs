@@ -1,6 +1,8 @@
 ﻿// NotificationWindow.xaml.cs
 using System.Collections.Generic;
+using System.Threading;
 using System.Windows;
+using System.Windows.Markup;
 using FeedNotify.Data;
 using FeedNotify.ViewModel;
 
@@ -22,6 +24,8 @@ namespace FeedNotify.View
         public NotificationWindow()
         {
             this.InitializeComponent();
+
+            this.Language = XmlLanguage.GetLanguage(Thread.CurrentThread.CurrentCulture.Name);
         }
 
         #endregion

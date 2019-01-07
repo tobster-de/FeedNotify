@@ -34,7 +34,7 @@
                 <!-- Grouping -->
                 <CollectionViewSource.GroupDescriptions>
                     <PropertyGroupDescription PropertyName="Publish"
-                                          Converter="{StaticResource ResourceKey=GroupDateConverter}" />
+                                              Converter="{StaticResource ResourceKey=GroupDateConverter}" />
                 </CollectionViewSource.GroupDescriptions>
 
             </CollectionViewSource>

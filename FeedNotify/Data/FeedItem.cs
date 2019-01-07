@@ -1,6 +1,7 @@
 ﻿// FeedItem.cs
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.ServiceModel.Syndication;
 
@@ -19,6 +20,7 @@ namespace FeedNotify.Data
             this.Summary = WebUtility.HtmlDecode(item.Summary.Text);
             this.Publish = item.PublishDate.DateTime;
             this.Id = item.Id;
+            this.Url = item.Links.FirstOrDefault()?.Uri.OriginalString ?? string.Empty;
         }
 
         #endregion
@@ -36,6 +38,8 @@ namespace FeedNotify.Data
         public string Summary { get; }
 
         public string Title { get; }
+
+        public string Url { get; }
 
         #endregion
 

@@ -35,12 +35,18 @@
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" FontStyle="Italic" FontSize="8" Margin="5" TextTrimming="CharacterEllipsis"
                        HorizontalAlignment="Stretch"
-                       Text="{Binding ElementName=feedItemControl, Path=Item.Publish, StringFormat=t, ConverterCulture=de}" />
+                       Text="{Binding Publish, StringFormat=t}">
+                <TextBlock.ToolTip>
+                    <!--as target property is not a string, StringFormat in a binding is not interpreted. https://stackoverflow.com/a/197130/2131959-->
+                    <!--https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings-->
+                    <ToolTip Content="{Binding Publish}" ContentStringFormat="{}{0:D} {0:t}"/>
+                </TextBlock.ToolTip>
+            </TextBlock>
             <TextBlock Grid.Column="1" FontStyle="Italic" FontSize="8" Margin="5" TextTrimming="CharacterEllipsis"
                        HorizontalAlignment="Stretch"
-                       Text="{Binding ElementName=feedItemControl, Path=Item.Feed}" />
-            <local:TimeoutControl 
-                Grid.Column="2" VerticalAlignment="Center" Radius="5" StrokeThickness="3" SegmentColor="Black" 
+                       Text="{Binding ElementName=feedItemControl, Path=Item.Feed}" 
+                       ToolTip="{Binding ElementName=feedItemControl, Path=Item.Url}" />
+            <local:TimeoutControl Grid.Column="2" VerticalAlignment="Center" Radius="5" StrokeThickness="3" SegmentColor="Black" 
                                   Visibility="{Binding ElementName=feedItemControl, Path=UseTimeout, Converter={StaticResource BoolVisibilityConverter}}"
                                   Percentage="{Binding ElementName=feedItemControl, Path=TimeoutPercentage}" MouseLeftButtonDown="TimeoutControl_MouseDown" Cursor="Wait"/>
         </Grid>
