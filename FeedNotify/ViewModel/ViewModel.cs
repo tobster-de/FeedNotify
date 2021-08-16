@@ -186,15 +186,19 @@ namespace FeedNotify.ViewModel
                                 this.notificationWindow.Show();
                             }
                         }
-                        
+
                         this.SyncAnnotations();
                     });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
             }
             finally
             {
                 this.running = false;
                 //this.OnPropertyChanged(() => this.LoadCommand);
-                this.loadCommand.TriggerExecuteChange();
+                this.loadCommand?.TriggerExecuteChange();
             }
         }
 
