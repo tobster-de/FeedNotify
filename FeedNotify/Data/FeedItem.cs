@@ -15,9 +15,9 @@ namespace FeedNotify.Data
         public FeedItem(SyndicationFeed feed, SyndicationItem item)
         {
             this.Item = item;
-            this.Feed = WebUtility.HtmlDecode(feed.Title.Text);
-            this.Title = WebUtility.HtmlDecode(item.Title.Text);
-            this.Summary = WebUtility.HtmlDecode(item.Summary.Text);
+            this.Feed = WebUtility.HtmlDecode(feed.Title?.Text?? string.Empty);
+            this.Title = WebUtility.HtmlDecode(item.Title?.Text?? string.Empty);
+            this.Summary = WebUtility.HtmlDecode(item.Summary?.Text ?? string.Empty);
             this.Publish = item.PublishDate.DateTime;
             this.Id = item.Id;
             this.Url = item.Links.FirstOrDefault()?.Uri.OriginalString ?? string.Empty;

@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.ServiceModel.Syndication;
 using System.Threading;
 using System.Threading.Tasks;
@@ -148,7 +149,8 @@ namespace FeedNotify.ViewModel
                 }
 
                 //string[] urls = { "http://www.heise.de/newsticker/heise-atom.xml", "http://rss.golem.de/rss.php?feed=RSS2.0" };
-
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                    
                 List<SyndicationFeed> feeds = new List<SyndicationFeed>();
                 foreach (string url in this.Feeds)
                 {
@@ -192,7 +194,7 @@ namespace FeedNotify.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.ToString());
             }
             finally
             {
